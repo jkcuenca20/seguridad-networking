@@ -29,5 +29,6 @@ jobs:
         run: |
           echo "Aplicando despliegue en OpenShift..."
           oc project jessica-cuenca-dev
-          oc apply -f ./
+          oc apply -f ./openshift/public.yaml
+          oc apply -f ./openshift/private.yaml
           echo "Despliegue aplicado correctamente"
