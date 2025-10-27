@@ -1,21 +1,33 @@
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  # El nombre que usarás para referenciar esta ServiceAccount
-  name: cicd-serviceaccount
-  # Opcional: El namespace donde se creará. Si se omite, se usará 'default'.
-  namespace: jessica-cuenca-dev
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: cicd-binding
-  namespace: jessica-cuenca-dev
-subjects:
-- kind: ServiceAccount
-  name: cicd-serviceaccount # La cuenta de servicio que creamos
-  namespace: jessica-cuenca-dev
-roleRef:
-  kind: ClusterRole
-  name: edit # El rol que creamos
-  apiGroup: rbac.authorization.k8s.io
+name: CI/CD to OpenShift
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install OC CLI
+        run: |
+          curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz | tar xz
+          sudo mv oc /usr/local/bin/
+          oc version
+
+      - name: Log in openshift
+        uses: redhat-actions/oc-login@v1
+        with:
+          openshift_server_url: https://api.rn1.0a51.p1.openshiftapps.com:6443
+          openshift_token: ${{ secrets.OPENSHIFT_TOKEN }}
+
+      - name: Deploy files
+        run: |
+          echo "Aplicando despliegue en OpenShift..."
+          oc project jessica-cuenca-dev
+          oc apply -f networking.yaml
+          echo "Despliegue aplicado correctamente"
